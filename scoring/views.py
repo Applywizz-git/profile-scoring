@@ -1496,6 +1496,7 @@ def analyze_resume(request):
 
 # ========= Non-tech analyzer =========
  # Save cache in /tmp
+import logging
 
 logger = logging.getLogger(__name__)
 
