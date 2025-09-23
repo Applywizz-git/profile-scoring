@@ -59,14 +59,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "profile_scoring.wsgi.application"
 
-import environ
+import os
+import dj_database_url
 
-env = environ.Env()
-environ.Env.read_env()
-
-# DATABASE_URL is provided by Render for PostgreSQL
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres://localhost:5432/profile_scoring')
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
 
 

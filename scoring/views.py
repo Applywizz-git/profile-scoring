@@ -16,6 +16,8 @@ from xml.etree import ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urlparse
 
+
+
 import requests
 from requests.exceptions import RequestException, SSLError, Timeout, ConnectionError as ReqConnError
 
@@ -27,16 +29,17 @@ from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.decorators.http import require_POST
 
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend for headless environments
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib") 
+
 from dotenv import load_dotenv
 load_dotenv()
 
 # PDF export
 from xhtml2pdf import pisa
 
-# Matplotlib (headless)
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+
 
 # ===== Utils (your modules) =====
 from .utils import (
@@ -1069,7 +1072,7 @@ def analyze_resume(request):
     os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
 
     import matplotlib
-    
+
     if request.POST.get("domain") != "technical":
         return HttpResponseBadRequest("Please choose Technical category.")
     if "resume" not in request.FILES:
@@ -1494,6 +1497,10 @@ def analyze_resume(request):
 # ========= Non-tech analyzer =========
 @require_POST
 def analyze_resume_v2(request):
+    import matplotlib
+    matplotlib.use('Agg')  # Non-interactive backend
+
+    from google.generativeai import genai
     context = {
         "applicant_name": "N/A",
         "ats_score": 0,
