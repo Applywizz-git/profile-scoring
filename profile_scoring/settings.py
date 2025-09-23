@@ -11,7 +11,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-insecure-key")
 DEBUG = env.bool("DEBUG", default=True)
 
 # Add your Render URL here
-RENDER_URL = env("RENDER_URL", default="profile-scoring-1oud.onrender.com")
+RENDER_URL = env("RENDER_URL", default="profile-scoring-1-wqww.onrender.com")
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", RENDER_URL]
 
 # If you post forms from your Render origin, add it to CSRF trusted
@@ -137,4 +137,5 @@ LOGGING = {
         },
     }
 }
+
 
