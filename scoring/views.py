@@ -1509,7 +1509,6 @@ def analyze_resume_v2(request):
     logger.info("Starting resume analysis")
     # Lazy import of Google Generative AI (only when the function is called)
     try:
-        from google.generativeai import genai
         from matplotlib import pyplot as plt  # Lazy import
     except ImportError as e:
         logger.error(f"Error importing libraries: {e}")
