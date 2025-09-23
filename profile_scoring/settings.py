@@ -59,13 +59,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "profile_scoring.wsgi.application"
 
-# DB (you can keep sqlite for now or switch to Render Postgres)
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
+
+# DATABASE_URL is provided by Render for PostgreSQL
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    'default': env.db('DATABASE_URL', default='postgres://localhost:5432/profile_scoring')
 }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
