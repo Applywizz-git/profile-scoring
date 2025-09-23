@@ -24,6 +24,8 @@ from django.template.loader import get_template
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.views.decorators.http import require_POST
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -1061,6 +1063,13 @@ def recommend_certifications(role: str) -> list:
 # ========= Technical analyzer =========
 @require_POST
 def analyze_resume(request):
+
+    import os
+    os.environ.setdefault("MPLBACKEND", "Agg")
+    os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+
+    import matplotlib
+    
     if request.POST.get("domain") != "technical":
         return HttpResponseBadRequest("Please choose Technical category.")
     if "resume" not in request.FILES:
