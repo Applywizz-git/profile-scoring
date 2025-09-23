@@ -33,6 +33,8 @@ import os
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend suitable for headless environments
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")  # Set Matplotlib cache directory
+import matplotlib.pyplot as plt
+
 
 
 from dotenv import load_dotenv
