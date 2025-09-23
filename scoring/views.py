@@ -29,9 +29,11 @@ from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.views.decorators.http import require_POST
 
+import os
 import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend for headless environments
-os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib") 
+matplotlib.use('Agg')  # Use non-interactive backend suitable for headless environments
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")  # Set Matplotlib cache directory
+
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -1502,6 +1504,7 @@ logger = logging.getLogger(__name__)
 
 @require_POST
 def analyze_resume_v2(request):
+    logger.info("Starting resume analysis")
     # Lazy import of Google Generative AI (only when the function is called)
     try:
         from google.generativeai import genai
@@ -1602,6 +1605,7 @@ def analyze_resume_v2(request):
 
     request.session["resume_context_nontech"] = context
     request.session.modified = True
+    logger.info("Finished resume analysis")
     return render(request, "score_of_non_tech.html", context)
 
 
