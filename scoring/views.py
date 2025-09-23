@@ -1555,11 +1555,57 @@ def analyze_resume_v2(request):
             linkedin_detection = "YES" if any(_LI_ANY_RE.search((l.get("final_url") or l.get("url") or "")) for l in display_links) else "NO"
             applicant_name = extract_applicant_name(resume_text) or "N/A"
 
+            map_to_dyn = {
+            "GitHub":         "GitHub Profile",
+            "LinkedIn":       "LinkedIn",
+            "Portfolio":      "Portfolio Website",
+            "Resume (ATS)":   "Resume (ATS Score)",
+            "Certifications": "Certifications & Branding",
+            }
+
+            DEFAULT_SECTION_MAX = {
+                "GitHub": 27,
+                "LinkedIn": 18,
+                "Portfolio": 23,
+                "Resume (ATS)": 23,
+                "Certifications": 9,
+            }
+
+            dyn_weights = dyn.get("weights") or {}
+
+            def dyn_max_for(tpl_name: str) -> int:
+                dyn_key = map_to_dyn[tpl_name]
+                sec = dyn["sections"].get(dyn_key, {})
+                if isinstance(sec, dict) and isinstance(sec.get("max"), (int, float)):
+                    return int(sec["max"])
+                if dyn_key in dyn_weights and isinstance(dyn_weights[dyn_key], (int, float)):
+                    return int(dyn_weights[dyn_key])
+                if tpl_name in dyn_weights and isinstance(dyn_weights[tpl_name], (int, float)):
+                    return int(dyn_weights[tpl_name])
+                return DEFAULT_SECTION_MAX[tpl_name]
+
+            SECTION_MAX = {name: dyn_max_for(name) for name in map_to_dyn.keys()}
+            TOTAL_MAX = sum(SECTION_MAX.values())
+
+            def _safe_sec(name):
+                return dyn["sections"].get(name, {"score": 0, "grade": "Poor", "sub_criteria": []})
+
+            resume_sec    = _safe_sec(map_to_dyn["Resume (ATS)"])
+
+
+            def _color_class(pct: int) -> str:
+                if pct > 80: return "score-box"
+                if pct >= 50: return "score-box-orange"
+                return "score-box-red"
+
             ats_result = ats_scoring_non_tech_v2(temp_path)
+            ats_score_val = int(resume_sec.get("score", 0) or 0)
+            ats_max_val   = SECTION_MAX["Resume (ATS)"] or 1
+            ats_percent   = int(round((ats_score_val / float(ats_max_val)) * 100))
 
             context.update({
                 "applicant_name": applicant_name,
-                "ats_score": ats_result.get("ats_score", 0),
+                "ats_score": ats_percent,
                 "overall_score_average": ats_result.get("overall_score_average", 0),
                 "overall_grade": ats_result.get("overall_grade", "N/A"),
                 "score_breakdown": ats_result.get("score_breakdown", {}),
