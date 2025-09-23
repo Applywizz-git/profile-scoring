@@ -1,1 +1,1 @@
-web: gunicorn profile_scoring.wsgi --log-file -
+web: gunicorn profile_scoring.wsgi:application
