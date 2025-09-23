@@ -5,6 +5,8 @@ import docx2txt
 from collections import OrderedDict
 import base64
 import io
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 
