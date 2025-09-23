@@ -1,1 +1,1 @@
-web: gunicorn profile_scoring.wsgi:application
+web: gunicorn profile_scoring.wsgi:application --timeout 120
