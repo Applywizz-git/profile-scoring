@@ -8,7 +8,7 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 # --- Core ---
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-insecure-key")
-DEBUG = env.bool("DEBUG", default=False)
+DEBUG = env.bool("DEBUG", default=True)
 
 # Add your Render URL here
 RENDER_URL = env("RENDER_URL", default="profile-scoring-1oud.onrender.com")
@@ -85,9 +85,9 @@ DEFAULT_FROM_EMAIL = env("OUTLOOK_SENDER_EMAIL", default=None)
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=30)
 
 # Static & media (Whitenoise)
-STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # hashed storage for long-lived caching in prod
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -106,3 +106,35 @@ if not DEBUG:
 # Tell matplotlib to use Agg and write cache to /tmp (ephemeral but writable)
 os.environ.setdefault("MPLBACKEND", "Agg")
 os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+
+import sys
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    }
+}
+
