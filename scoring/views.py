@@ -1506,14 +1506,6 @@ logger = logging.getLogger(__name__)
 
 @require_POST
 def analyze_resume_v2(request):
-    logger.info("Starting resume analysis")
-    # Lazy import of Google Generative AI (only when the function is called)
-    try:
-        from matplotlib import pyplot as plt  # Lazy import
-    except ImportError as e:
-        logger.error(f"Error importing libraries: {e}")
-        return JsonResponse({"error": "Failed to import required libraries."}, status=500)
-
     context = {
         "applicant_name": "N/A",
         "ats_score": 0,
@@ -1528,25 +1520,14 @@ def analyze_resume_v2(request):
         "github_detection": "NO",
         "linkedin_detection": "NO",
     }
-
     if request.method == "POST" and request.FILES.get("resume"):
         resume_file = request.FILES["resume"]
         ext = os.path.splitext(resume_file.name)[1].lower()
-
-        # Save the file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+            for chunk in resume_file.chunks():
+                tmp.write(chunk)
+            temp_path = tmp.name
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-                for chunk in resume_file.chunks():
-                    tmp.write(chunk)
-                temp_path = tmp.name
-            logger.info(f"Temporary file created at: {temp_path}")
-        except Exception as e:
-            logger.error(f"Error saving the resume file: {e}")
-            context["error"] = "Failed to save the resume file."
-            return render(request, "score_of_non_tech.html", context)
-
-        try:
-            # Extract text based on file type
             if ext == ".pdf":
                 extracted_links, resume_text_raw = extract_links_combined(temp_path)
                 resume_text = _normalize_text(resume_text_raw or "")
@@ -1563,21 +1544,17 @@ def analyze_resume_v2(request):
                 context["error"] = "Unsupported file format."
                 return render(request, "score_of_non_tech.html", context)
 
-            # Extract URLs and deduplicate
             text_urls = extract_urls_from_text(resume_text)
             merged = _dedupe_preserve_order_strings((extracted_links or []) + text_urls)
 
-            # Prepare display links and validate them
             display_links = [{"url": u, "type": "other"} for u in merged]
             display_links = validate_links_enrich(display_links)
 
-            # Detect contact info and social links
             contact_detection = "YES" if _detect_contact(resume_text) else "NO"
             github_detection = "YES" if any(l for l in display_links if l.get("ok") and l.get("type") == "github") else "NO"
             linkedin_detection = "YES" if any(_LI_ANY_RE.search((l.get("final_url") or l.get("url") or "")) for l in display_links) else "NO"
             applicant_name = extract_applicant_name(resume_text) or "N/A"
 
-            # ATS scoring logic
             ats_result = ats_scoring_non_tech_v2(temp_path)
 
             context.update({
@@ -1593,20 +1570,14 @@ def analyze_resume_v2(request):
                 "github_detection": github_detection,
                 "linkedin_detection": linkedin_detection,
             })
-            logger.info(f"ATS scoring completed successfully.")
-        except Exception as e:
-            logger.error(f"Error during resume analysis: {e}")
-            context["error"] = f"An error occurred: {str(e)}"
-            return render(request, "score_of_non_tech.html", context)
         finally:
             try:
-                os.unlink(temp_path)  # Clean up the temporary file
-            except Exception as e:
-                logger.error(f"Error cleaning up temporary file: {e}")
+                os.unlink(temp_path)
+            except Exception:
+                pass
 
     request.session["resume_context_nontech"] = context
     request.session.modified = True
-    logger.info("Finished resume analysis")
     return render(request, "score_of_non_tech.html", context)
 
 
@@ -1647,3 +1618,4 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
