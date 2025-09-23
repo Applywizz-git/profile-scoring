@@ -902,134 +902,134 @@ def recommend_certifications(role: str) -> list:
         ],
 
         # Non-Technical Roles
-        "Human Resources (HR)": [
+        "Human Resources (HR) (non-tech)": [
             "Human Resource Management - Coursera",
             "HR Fundamentals - LinkedIn Learning",
             "Recruitment & Talent Management - Udemy"
         ],
-        "Recruiter": [
+        "Recruiter (non-tech)": [
             "Recruitment Process Optimization - Coursera",
             "Certified Professional in Human Resources (PHR) - Udemy",
             "Recruiting Talent - LinkedIn Learning"
         ],
-        "Talent Acquisition Specialist": [
+        "Talent Acquisition Specialist (non-tech)": [
             "Talent Acquisition and Recruitment - Udemy",
             "Advanced Recruiting Techniques - LinkedIn Learning"
         ],
-        "HR Manager": [
+        "HR Manager (non-tech)": [
             "HR Management and Leadership - Coursera",
             "Talent Management and HR Strategy - Udemy",
             "HR & People Management - LinkedIn Learning"
         ],
-        "Marketing": [
+        "Marketing (non-tech)": [
             "Digital Marketing Specialization - Coursera",
             "Marketing Analytics - Coursera",
             "Content Marketing Certification - HubSpot Academy"
         ],
-        "Digital Marketing Specialist": [
+        "Digital Marketing Specialist (non-tech)": [
             "Google Analytics for Beginners - Coursera",
             "Advanced Google Analytics - Coursera",
             "Social Media Marketing Certification - HubSpot Academy"
         ],
-        "Content Marketer": [
+        "Content Marketer (non-tech)": [
             "Content Marketing Strategy - Coursera",
             "Inbound Content Marketing - HubSpot Academy"
         ],
-        "SEO Specialist": [
+        "SEO Specialist (non-tech)": [
             "SEO Certification - Coursera",
             "Advanced SEO - Udemy",
             "Search Engine Optimization (SEO) Specialization - Coursera"
         ],
-        "Social Media Manager": [
+        "Social Media Manager (non-tech)": [
             "Social Media Marketing - Coursera",
             "Social Media Strategy - LinkedIn Learning"
         ],
-        "Product Marketing Manager": [
+        "Product Marketing Manager (non-tech)": [
             "Product Marketing and Strategy - Coursera",
             "Marketing Strategies for Product Managers - Udemy"
         ],
-        "Sales": [
+        "Sales (non-tech)": [
             "Sales Training - Udemy",
             "Sales Strategies for Success - Coursera"
         ],
-        "Business Development": [
+        "Business Development (non-tech)": [
             "Business Development and Sales - Coursera",
             "Sales & Business Development - LinkedIn Learning"
         ],
-        "Account Executive": [
+        "Account Executive (non-tech)": [
             "Certified Account Executive - Udemy",
             "Sales Fundamentals - Coursera"
         ],
-        "Customer Success Manager": [
+        "Customer Success Manager (non-tech)": [
             "Customer Success Management - Coursera",
             "Customer Service Fundamentals - LinkedIn Learning"
         ],
-        "Customer Service": [
+        "Customer Service (non-tech)": [
             "Customer Service Excellence - Coursera",
             "Customer Service Fundamentals - LinkedIn Learning"
         ],
-        "Finance": [
+        "Finance (non-tech)": [
             "Financial Accounting - Coursera",
             "Financial Markets - Coursera",
             "Finance for Non-Finance Professionals - Coursera"
         ],
-        "Financial Analyst": [
+        "Financial Analyst (non-tech)": [
             "Financial Analysis for Business Decisions - Coursera",
             "Financial Modeling & Valuation Analyst - Udemy"
         ],
-        "Accountant": [
+        "Accountant (non-tech)": [
             "Certified Public Accountant (CPA) - Udemy",
             "Accounting & Financial Reporting - Coursera"
         ],
-        "Operations Manager": [
+        "Operations Manager (non-tech)": [
             "Operations Management - Coursera",
             "Project Management Principles - LinkedIn Learning"
         ],
-        "Project Manager": [
+        "Project Manager (non-tech)": [
             "PMP Certification - Udemy",
             "Agile Project Management - Coursera"
         ],
-        "Program Manager": [
+        "Program Manager (non-tech)": [
             "Program Management Essentials - Udemy",
             "Agile Project Management for Managers - Coursera"
         ],
-        "Technical Writer": [
+        "Technical Writer (non-tech)": [
             "Technical Writing Certification - Udemy",
             "Business Writing for Technical Professionals - Coursera"
         ],
-        "UX Designer": [
+        "UX Designer (non-tech)": [
             "UX Design Certification - Coursera",
             "UI/UX Design Bootcamp - Udemy"
         ],
-        "UI Designer": [
+        "UI Designer (non-tech)": [
             "User Interface Design Certification - Coursera",
             "UX/UI Design Specialization - LinkedIn Learning"
         ],
-        "Graphic Designer": [
+        "Graphic Designer (non-tech)": [
             "Graphic Design Specialization - Coursera",
             "Graphic Design Bootcamp - Udemy"
         ],
-        "Data Entry": [
+        "Data Entry (non-tech)": [
             "Data Entry for Beginners - Udemy",
             "Microsoft Excel for Data Entry - LinkedIn Learning"
         ],
-        "Office Administrator": [
+        "Office Administrator (non-tech)": [
             "Office Management Training - Coursera",
             "Admin Assistant Training - LinkedIn Learning"
         ],
-        "Consultant": [
+        "Consultant (non-tech)": [
             "Consulting Skills for Professionals - Udemy",
             "Business Consultant Training - Coursera"
         ],
-        "Business Analyst": [
+        "Business Analyst (non-tech)": [
             "Business Analysis for IT Projects - Coursera",
             "Business Analysis Fundamentals - Udemy"
         ],
-        "Supply Chain Analyst": [
+        "Supply Chain Analyst (non-tech)": [
             "Supply Chain Management - Coursera",
             "Logistics and Supply Chain Management - LinkedIn Learning"
         ],
-        "Procurement Specialist": [
+        "Procurement Specialist (non-tech)": [
             "Procurement and Supply Chain Management - Udemy",
             "Advanced Procurement and Sourcing - Coursera"
         ],
