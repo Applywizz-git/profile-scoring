@@ -16,7 +16,8 @@ environ.Env.read_env(BASE_DIR / ".env")
 # =====================
 SECRET_KEY = env('DJANGO_SECRET_KEY', default=os.getenv('DJANGO_SECRET_KEY'))  # Make sure to set this in Render
 DEBUG = False  # Set to False in production
-ALLOWED_HOSTS = ['your-app-name.onrender.com', 'localhost', '127.0.0.1']  # Add Render URL
+ALLOWED_HOSTS = ['profile-scoring-1oud.onrender.com', 'localhost', '127.0.0.1']
+
 
 # =====================
 # Application definition
@@ -126,3 +127,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SECURE_SSL_REDIRECT = True  # Ensure all traffic is redirected to HTTPS
 CSRF_COOKIE_SECURE = True  # Use secure cookies
 SESSION_COOKIE_SECURE = True  # Use secure cookies
+
