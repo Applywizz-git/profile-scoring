@@ -60,6 +60,47 @@
 
     #loadingText{ font-size:1.08rem; font-weight:800; color:#0f172a; letter-spacing:.2px; }
     #etaNote{ font-size:.95rem; color:#475569; margin-bottom:4px; }
+
+    /* Customizing the input and datalist dropdown appearance */
+    #job_role {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    #job_role_label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    /* Styling the datalist */
+    datalist {
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      position: absolute;
+      z-index: 999;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    /* Styling the options inside the datalist */
+    #rolesList option {
+      padding: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #rolesList option:hover {
+      background-color: #f0f0f0;
+    }
   </style>
 </head>
 <body>
@@ -71,9 +112,9 @@
   <form id="resumeForm" method="POST" enctype="multipart/form-data" action="{% url 'analyze_resume' %}">
     {% csrf_token %}
 
-    <!-- Single smart role input with datalist -->
-    <label for="job_role">Job Role</label>
+    <label for="job_role" id="job_role_label">Job Role</label>
     <input type="text" id="job_role" name="job_role" list="rolesList" placeholder="Type or choose a role (e.g., Software Engineer)" required />
+
     <datalist id="rolesList">
       <!-- ==== Technical (sample but broad) ==== -->
       <option value="Software Engineer"></option>
@@ -174,7 +215,6 @@
     <div id="etaNote"></div>
   </div>
 </div>
-
 <script>
 (function(){
   /* Lottie asset paths (put JSON files in /static/lottie/) */
