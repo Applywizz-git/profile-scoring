@@ -1554,6 +1554,14 @@ def analyze_resume_v2(request):
             github_detection = "YES" if any(l for l in display_links if l.get("ok") and l.get("type") == "github") else "NO"
             linkedin_detection = "YES" if any(_LI_ANY_RE.search((l.get("final_url") or l.get("url") or "")) for l in display_links) else "NO"
             applicant_name = extract_applicant_name(resume_text) or "N/A"
+            
+
+            dyn = calculate_dynamic_ats_score(
+            resume_text=resume_text,
+            github_username="",
+            leetcode_username="",
+            extracted_links="",
+        )
 
             map_to_dyn = {
             "GitHub":         "GitHub Profile",
@@ -1664,4 +1672,5 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
