@@ -692,65 +692,52 @@ def verify_login_otp(request):
 
 # ========= PDF Download =========
 def download_resume_pdf(request):
-    # pull either key (tech/non-tech)
-    resume_file = request.FILES["resume"]
-    ext = os.path.splitext(resume_file.name)[1].lower()
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-        for chunk in resume_file.chunks():
-            tmp.write(chunk)
-        temp_path = tmp.name
-
-    try:
-        # 1) Extract text & anchors
-        if ext == ".pdf":
-            legacy_links, resume_text_raw = extract_links_combined(temp_path)
-            resume_text = _normalize_text(resume_text_raw or "")
-        elif ext == ".docx":
-            resume_text_raw = extract_text_from_docx(temp_path) or ""
-            resume_text = _normalize_text(resume_text_raw)
-            legacy_links = extract_links_from_docx(temp_path)
-        elif ext in (".txt",):
-            with open(temp_path, "r", encoding="utf-8", errors="ignore") as f:
-                resume_text_raw = f.read()
-                resume_text = _normalize_text(resume_text_raw or "")
-                legacy_links = []
-        else:
-            return HttpResponseBadRequest("Unsupported file format.")
+    # Pull either key (tech/non-tech)
+    context = request.session.get("resume_context_tech") or \
+              request.session.get("resume_context_nontech") or \
+              request.session.get("resume_context", {})
     
-        applicant_name = extract_applicant_name(resume_text) or "Candidate"
-        context = request.session.get("resume_context_tech") or \
-                  request.session.get("resume_context_nontech") or \
-                  request.session.get("resume_context", {})
-
+    # Get the user's role from context
+    user_role = context.get("role", "")
+    
+    # Check if the user's role is non-technical
+    if user_role in [
+        "Human Resources (HR) (Non-Tech)", "Recruiter (Non-Tech)", "Talent Acquisition Specialist (Non-Tech)", 
+        "HR Manager (Non-Tech)", "Marketing (Non-Tech)", "Digital Marketing Specialist (Non-Tech)", 
+        "Content Marketer (Non-Tech)", "SEO Specialist (Non-Tech)", "Social Media Manager (Non-Tech)", 
+        "Product Marketing Manager (Non-Tech)", "Sales (Non-Tech)", "Business Development (Non-Tech)", 
+        "Account Executive (Non-Tech)", "Customer Success Manager (Non-Tech)", "Customer Service (Non-Tech)", 
+        "Finance (Non-Tech)", "Financial Analyst (Non-Tech)", "Accountant (Non-Tech)", 
+        "Operations Manager (Non-Tech)", "Project Manager (Non-Tech)", "Program Manager (Non-Tech)", 
+        "Technical Writer (Non-Tech)", "UX Designer (Non-Tech)", "UI Designer (Non-Tech)", 
+        "Graphic Designer (Non-Tech)", "Data Entry (Non-Tech)", "Office Administrator (Non-Tech)", 
+        "Consultant (Non-Tech)", "Business Analyst (Non-Tech)", "Supply Chain Analyst (Non-Tech)", 
+        "Procurement Specialist (Non-Tech)", "Quality Assurance (Non-Tech)", "Product Manager (Non-Tech)"
+    ]:
+        # Set template to score_of_non_tech.html for non-technical roles
+        template_path = "score_of_non_tech.html"
+    else:
+        # Default to resume_result.html for technical roles
         template_path = "resume_result.html"
-        if context and context.get("github_detection") == "NO" and context.get("role") in ["Human Resources","Marketing","Sales","Finance","Customer Service"]:
-            template_path = "score_of_non_tech.html"
-        
-        # Render the HTML template for the PDF
-        template = get_template(template_path)
-        html = template.render(context)
-
-        # Create the PDF response
-        response = HttpResponse(content_type="application/pdf")
-        # Set the filename to include the applicant's name
-        response["Content-Disposition"] = f'attachment; filename="{applicant_name}__Profilevalidation_Report.pdf"'
-
-        # Generate PDF from HTML
-        pisa_status = pisa.CreatePDF(html, dest=response)
-        if pisa_status.err:
-            return HttpResponse("We had some errors during PDF generation.")
-        return response
-
-    except Exception as e:
-        return HttpResponse(f"An error occurred: {str(e)}")
-
-    finally:
-        # Ensure the temporary file is removed after use
-        try:
-            os.unlink(temp_path)
-        except Exception:
-            pass
+    
+    # Get the template and render HTML
+    template = get_template(template_path)
+    html = template.render(context)
+    
+    # Get the applicant's name from context (assuming it's available)
+    applicant_name = context.get("applicant_name", "unknown_applicant")
+    
+    # Create the response and set the content type
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{applicant_name}_Profilevalidation_Report.pdf"'
+    
+    # Create PDF from HTML content
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    
+    if pisa_status.err:
+        return HttpResponse("We had some errors <pre>" + html + "</pre>")
+    
+    return response
 
 def recommend_certifications(role: str) -> list:
     """
@@ -1715,4 +1702,5 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
