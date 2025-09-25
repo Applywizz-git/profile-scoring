@@ -1634,7 +1634,7 @@ def analyze_resume_v2(request):
 
             def _color_class(pct: int) -> str:
                 if pct > 80: return "score-box"
-                if pct >= 50: return "score-box-orange"
+                if pct >= 60: return "score-box-orange"
                 return "score-box-red"
 
             ats_result = ats_scoring_non_tech_v2(temp_path)
@@ -1703,6 +1703,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
