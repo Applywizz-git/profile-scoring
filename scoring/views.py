@@ -693,21 +693,64 @@ def verify_login_otp(request):
 # ========= PDF Download =========
 def download_resume_pdf(request):
     # pull either key (tech/non-tech)
-    context = request.session.get("resume_context_tech") or \
-              request.session.get("resume_context_nontech") or \
-              request.session.get("resume_context", {})
-    template_path = "resume_result.html"
-    # simple heuristic switcher
-    if context and context.get("github_detection") == "NO" and context.get("role") in ["Human Resources","Marketing","Sales","Finance","Customer Service"]:
-        template_path = "score_of_non_tech.html"
-    template = get_template(template_path)
-    html = template.render(context)
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="resume_report.pdf"'
-    pisa_status = pisa.CreatePDF(html, dest=response)
-    if pisa_status.err:
-        return HttpResponse("We had some errors <pre>" + html + "</pre>")
-    return response
+    resume_file = request.FILES["resume"]
+    ext = os.path.splitext(resume_file.name)[1].lower()
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+        for chunk in resume_file.chunks():
+            tmp.write(chunk)
+        temp_path = tmp.name
+
+    try:
+        # 1) Extract text & anchors
+        if ext == ".pdf":
+            legacy_links, resume_text_raw = extract_links_combined(temp_path)
+            resume_text = _normalize_text(resume_text_raw or "")
+        elif ext == ".docx":
+            resume_text_raw = extract_text_from_docx(temp_path) or ""
+            resume_text = _normalize_text(resume_text_raw)
+            legacy_links = extract_links_from_docx(temp_path)
+        elif ext in (".txt",):
+            with open(temp_path, "r", encoding="utf-8", errors="ignore") as f:
+                resume_text_raw = f.read()
+                resume_text = _normalize_text(resume_text_raw or "")
+                legacy_links = []
+        else:
+            return HttpResponseBadRequest("Unsupported file format.")
+    
+        applicant_name = extract_applicant_name(resume_text) or "Candidate"
+        context = request.session.get("resume_context_tech") or \
+                  request.session.get("resume_context_nontech") or \
+                  request.session.get("resume_context", {})
+
+        template_path = "resume_result.html"
+        if context and context.get("github_detection") == "NO" and context.get("role") in ["Human Resources","Marketing","Sales","Finance","Customer Service"]:
+            template_path = "score_of_non_tech.html"
+        
+        # Render the HTML template for the PDF
+        template = get_template(template_path)
+        html = template.render(context)
+
+        # Create the PDF response
+        response = HttpResponse(content_type="application/pdf")
+        # Set the filename to include the applicant's name
+        response["Content-Disposition"] = f'attachment; filename="{applicant_name}__Profilevalidation_Report.pdf"'
+
+        # Generate PDF from HTML
+        pisa_status = pisa.CreatePDF(html, dest=response)
+        if pisa_status.err:
+            return HttpResponse("We had some errors during PDF generation.")
+        return response
+
+    except Exception as e:
+        return HttpResponse(f"An error occurred: {str(e)}")
+
+    finally:
+        # Ensure the temporary file is removed after use
+        try:
+            os.unlink(temp_path)
+        except Exception:
+            pass
 
 def recommend_certifications(role: str) -> list:
     """
@@ -1672,5 +1715,4 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
-
 
