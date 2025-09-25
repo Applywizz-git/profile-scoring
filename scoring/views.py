@@ -1098,9 +1098,9 @@ def recommend_certifications(role: str) -> list:
 
 
 # ========= Technical analyzer =========
+# ========= Technical analyzer =========
 @require_POST
 def analyze_resume(request):
-
     import os
     os.environ.setdefault("MPLBACKEND", "Agg")
     os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
@@ -1312,7 +1312,7 @@ def analyze_resume(request):
             dyn_key = map_to_dyn[tpl_name]
             sec = dyn["sections"].get(dyn_key, {})
             if isinstance(sec, dict) and isinstance(sec.get("max"), (int, float)):
-                return int(sec["max"])
+                return int(sec.get("max"))
             if dyn_key in dyn_weights and isinstance(dyn_weights[dyn_key], (int, float)):
                 return int(dyn_weights[dyn_key])
             if tpl_name in dyn_weights and isinstance(dyn_weights[tpl_name], (int, float)):
@@ -1476,6 +1476,7 @@ def analyze_resume(request):
                 "leetcode": leetcode_username or "",
             }, sort_keys=True).encode("utf-8")).hexdigest(),
 
+
             "applicant_name": applicant_name,
 
             # Header badges
@@ -1527,13 +1528,13 @@ def analyze_resume(request):
             os.unlink(temp_path)
         except Exception:
             pass
-
 # ========= Non-tech analyzer =========
  # Save cache in /tmp
 import logging
 
 logger = logging.getLogger(__name__)
 
+# ========= Non-tech analyzer =========
 @require_POST
 def analyze_resume_v2(request):
     context = {
@@ -1702,5 +1703,6 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
