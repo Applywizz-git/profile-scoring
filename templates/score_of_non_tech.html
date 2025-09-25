@@ -454,9 +454,11 @@ document.addEventListener("DOMContentLoaded", function () {
       // Add the image (fill entire page)
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
-      // Extract applicant name directly from the text content
+      // Extract only the applicant name (ignore other details)
       const applicantName = document.querySelector(".applicant-info").textContent
-                                .replace("Applicant Name:", "").trim();
+                                .split('Contact Detection:')[0]  // Get text before "Contact Detection"
+                                .replace("Applicant Name:", "")  // Remove the "Applicant Name" label
+                                .trim(); // Remove leading/trailing spaces
 
       // Save the PDF with the dynamic filename
       pdf.save(`${applicantName}_Profilevalidation_Report.pdf`);
@@ -466,6 +468,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
 </script>
 </body>
 </html>
+
