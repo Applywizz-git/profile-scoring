@@ -453,8 +453,11 @@ document.addEventListener("DOMContentLoaded", function () {
       // Add the image (fill entire page)
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
-      // Save PDF
-      pdf.save("resume_report.pdf");
+      // Dynamically get applicant name from the HTML content
+      const applicantName = document.querySelector(".applicant-info").querySelector("b").textContent.trim();
+
+      // Save the PDF with the dynamic filename
+      pdf.save(`${applicantName}_Profilevalidation_Report.pdf`);
     }).catch(e => {
       alert("Error generating PDF: " + e.message);
       reportContent.style.width = originalWidth;  // Ensure restore on error too
