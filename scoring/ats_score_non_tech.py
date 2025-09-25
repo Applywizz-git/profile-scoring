@@ -181,16 +181,18 @@ def ats_scoring_non_tech_v2(file_path, applicant_name="Candidate"):
 
     contact_detection = "YES" if re.search(r'\b\d{10}\b', text) and re.search(r'@\w+\.\w+', text) else "NO"
     
+    # Updated Criteria with new weightings and structure
     criteria = [
-        ("Format & Layout", 20, "Single-column; professional font; minimal colours; avoid headers/footers, text boxes, tables, and multi-column designs."),
+        ("Portfolio Links", 20, "Include portfolio links such as GitHub, personal websites, or project repositories."),
+        ("Format & Layout", 16, "Single-column; professional font; minimal colours; avoid headers/footers, text boxes, tables, and multi-column designs."),
         ("File Type & Parsing", 10, "Use .docx unless PDF is explicitly accepted; avoid image-based formats."),
-        ("Section Headings & Structure", 10, "Use standard headings (Work Experience, Education, Skills), reverse-chronological order, consistent date formats."),
-        ("Job-Title & Core Skills", 10, "Include the target job title and 2–3 critical skills in the headline or summary."),
-        ("Dedicated Skills Section", 10, "Clear Skills/Core Competencies list; include relevant hard skills and abbreviations."),
-        ("Keyword Integration", 10, "Use keywords from job descriptions naturally throughout the resume."),
-        ("Action Verbs", 10, "Start bullet points with strong verbs like 'Developed', 'Implemented', 'Optimized'."),
-        ("Quantifiable Results", 10, "Provide metrics and outcomes using industry terminology."),
-        ("Conciseness & Readability", 10, "Under two pages; avoid dense paragraphs; use bullet points."),
+        ("Section Headings & Structure", 8, "Use standard headings (Work Experience, Education, Skills), reverse-chronological order, consistent date formats."),
+        ("Job-Title & Core Skills", 8, "Include the target job title and 2–3 critical skills in the headline or summary."),
+        ("Dedicated Skills Section", 8, "Clear Skills/Core Competencies list; include relevant hard skills and abbreviations."),
+        ("Keyword Integration", 8, "Use keywords from job descriptions naturally throughout the resume."),
+        ("Action Verbs", 8, "Start bullet points with strong verbs like 'Developed', 'Implemented', 'Optimized'."),
+        ("Quantifiable Results", 8, "Provide metrics and outcomes using industry terminology."),
+        ("Conciseness & Readability", 8, "Under two pages; avoid dense paragraphs; use bullet points."),
         ("Contact Info & Links", 5, "Include name, phone, email."),
         ("Proofreading & Consistency", 5, "Ensure spelling/grammar accuracy and consistent formatting."),
     ]
@@ -202,7 +204,16 @@ def ats_scoring_non_tech_v2(file_path, applicant_name="Candidate"):
         score = 0
         recs = []
 
-        if name == "Format & Layout":
+        if name == "Portfolio Links":
+            # Check if portfolio links (GitHub, personal site, etc.) are mentioned in the resume
+            portfolio_links = ["github.com", "personal website", "portfolio", "gitlab.com", "dribbble.com"]
+            if any(link in text_lower for link in portfolio_links):
+                score = weight
+            else:
+                score = 0
+                recs.append("Include links to portfolio or GitHub to showcase projects and work experience.")
+
+        elif name == "Format & Layout":
             if "\t" not in text and not re.search(r'(table|column|header|footer)', text_lower):
                 score = weight
             else:
