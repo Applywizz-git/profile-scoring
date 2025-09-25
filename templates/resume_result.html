@@ -354,7 +354,7 @@
 <!-- Now your existing Suggestions / Recommendations block -->
 
 
-        {% if missing_certifications %}
+       {% if missing_certifications %}
     <div class="recommendations-section" style="margin-top: 20px;">
         <h2>Recommended Certifications for {{ role|default:"Your Role" }}</h2>
         <p>Based on your resume and target role, you may consider adding these certifications:</p>
@@ -364,7 +364,8 @@
             {% endfor %}
         </ul>
     </div>
-    {% endif %}
+{% endif %}
+
 
     {% if suggestions %}
     <div class="recommendations-section" style="margin-top: 20px;">
@@ -479,5 +480,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
 
