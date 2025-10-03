@@ -2812,20 +2812,24 @@ def analyze_resume(request):
                     # Assign a unique color for each non-ATS section
                     colors.append(color_palette[i % len(color_palette)])
             
+            # Create the pie chart with unique colors
             wedges, _, _ = ax.pie(values, labels=None, autopct=_autopct, startangle=140,
                                    colors=colors, textprops={"color": "white", "fontsize": 10})
             ax.axis("equal")
             
+            # Prepare legend labels
             legend_labels = []
             for lbl, val in zip(labels, values):
                 max_val = section_max_ref.get(lbl, 1)  # Use 1 to prevent ZeroDivisionError
                 percent = (val / max_val) * 100.0 if max_val else 0.0
                 legend_labels.append(f"{lbl}: {val}/{max_val} ({percent:.0f}%)")
             
+            # Ensure the legend uses the same colors as the pie chart
             ax.legend(wedges, legend_labels, loc="lower center", bbox_to_anchor=(0.5, -0.22),
                       fontsize=9, frameon=False, labelcolor="white", ncol=2, columnspacing=1.2,
                       handlelength=1.2, borderpad=0.2)
             
+            # Save the figure as a base64-encoded PNG
             buf = io.BytesIO()
             plt.tight_layout()
             plt.savefig(buf, format="png", dpi=160, facecolor="#121212", bbox_inches="tight")
@@ -2834,6 +2838,7 @@ def analyze_resume(request):
             plt.close(fig)
             
             return b64
+
 
 
         # ---
@@ -3280,6 +3285,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
