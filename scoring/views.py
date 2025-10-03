@@ -2779,8 +2779,6 @@ def analyze_resume(request):
 
         def _build_pie_base64_local(scores: Dict[str, int]) -> str:
             """Builds a base64 encoded PNG image of a pie chart for section scores."""
-            # NOTE: This uses TECHNICAL_WEIGHTS and SECTION_MAX from the enclosing scope or module scope.
-            # SECTION_MAX must be correctly calculated before calling this function.
             
             # Placeholder for SECTION_MAX for standalone testing (replace with actual module access if needed)
             SECTION_MAX_FALLBACK = {
@@ -2792,7 +2790,7 @@ def analyze_resume(request):
             
             if not scores or sum(scores.values()) == 0:
                 return ""
-                
+            
             labels, values = list(scores.keys()), list(scores.values())
             fig, ax = plt.subplots(figsize=(4.6, 4.6), facecolor="#121212")
             ax.set_facecolor("#121212")
@@ -2803,19 +2801,27 @@ def analyze_resume(request):
             # We'll use a placeholder/assuming it's available.
             section_max_ref = SECTION_MAX if 'SECTION_MAX' in globals() else SECTION_MAX_FALLBACK
             
+            # Define the colors for each section
+            colors = []
+            for section in labels:
+                if section == "Resume (ATS)":
+                    colors.append("#ff7f0e")  # Orange for ATS
+                else:
+                    colors.append("#1f77b4")  # Blue for others (you can change this to any color)
+            
             wedges, _, _ = ax.pie(values, labels=None, autopct=_autopct, startangle=140,
-                                textprops={"color": "white", "fontsize": 10})
+                                   colors=colors, textprops={"color": "white", "fontsize": 10})
             ax.axis("equal")
             
             legend_labels = []
             for lbl, val in zip(labels, values):
-                max_val = section_max_ref.get(lbl, 1) # Use 1 to prevent ZeroDivisionError
+                max_val = section_max_ref.get(lbl, 1)  # Use 1 to prevent ZeroDivisionError
                 percent = (val / max_val) * 100.0 if max_val else 0.0
                 legend_labels.append(f"{lbl}: {val}/{max_val} ({percent:.0f}%)")
-                
+            
             ax.legend(wedges, legend_labels, loc="lower center", bbox_to_anchor=(0.5, -0.22),
-                    fontsize=9, frameon=False, labelcolor="white", ncol=2, columnspacing=1.2,
-                    handlelength=1.2, borderpad=0.2)
+                      fontsize=9, frameon=False, labelcolor="white", ncol=2, columnspacing=1.2,
+                      handlelength=1.2, borderpad=0.2)
             
             buf = io.BytesIO()
             plt.tight_layout()
@@ -2823,7 +2829,9 @@ def analyze_resume(request):
             b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
             buf.close()
             plt.close(fig)
+            
             return b64
+
 
         # ---
 
@@ -3269,6 +3277,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
