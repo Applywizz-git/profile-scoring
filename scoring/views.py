@@ -1997,7 +1997,7 @@ def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str
         ln = _norm_text(raw)  # Assuming _norm_text cleans the text properly
 
         # Detect entering/leaving the certification section based on keywords (excluding licenses)
-        if re.match(r"^\s*(certifications?|CERTIFICATIONS?)\s*:?$", ln, re.I):
+        if re.match(r"^\s*(certifications?|CERTIFICATIONS?|certified|certificate|badge)\s*:?$", ln, re.I):
             in_cert_block = True
             continue
         if in_cert_block and (not ln or re.match(r"^(experience|education|projects?|skills?|profile|summary|achievements?)\s*:?\s*$", ln, re.I)):
@@ -2020,7 +2020,7 @@ def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str
     seen = set()
     unique_certificates: List[Dict[str, str]] = []
     for cert in certificates:
-        key = re.sub(r"[\s\-–—]+", " ", cert['name'].lower()).strip()
+        key = re.sub(r"[\s\-–—]+", " ", cert['name'].lower()).strip()  # Normalize and remove unwanted characters
         if key and key not in seen:
             seen.add(key)
             unique_certificates.append(cert)
@@ -3301,6 +3301,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
