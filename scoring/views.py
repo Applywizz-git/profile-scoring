@@ -1969,13 +1969,33 @@ from typing import List, Tuple, Dict
 import re
 from typing import List, Tuple, Dict
 
-def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str, str]]]:
+# --- REQUIRED HELPER FUNCTIONS ---
+
+def _norm_text(text: str) -> str:
     """
-    Scans resume text for certifications (excluding licenses) and scores them dynamically based on their relevance.
-    
+    Placeholder: Cleans and normalizes the input text line.
+    A simple implementation might just return the stripped text.
+    """
+    return text.strip()
+
+def _clean_cert_name(text: str) -> str:
+    """
+    Placeholder: Cleans a potential certification name.
+    """
+    # In a real-world scenario, this function would remove dates, parentheticals,
+    # bullet points, and other noise to isolate the certificate name.
+    return _norm_text(text)
+
+# --- MAIN FUNCTION (Revised) ---
+
+def count_certifications_from_text_revised(resume_text: str) -> Tuple[int, List[Dict[str, str]]]:
+    """
+    Scans resume text ONLY for lines within an explicit 'Certifications' block,
+    counts the unique certifications, and scores them.
+
     Args:
         resume_text: The text of the resume to scan for certifications.
-        
+
     Returns:
         A tuple (count, certificates), where:
         - count is the number of unique certifications found
@@ -1983,44 +2003,42 @@ def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str
     """
     certificates: List[Dict[str, str]] = []
 
-    # --- From text (section + anywhere) ---
+    # --- From text (section only) ---
     lines = [ln.strip() for ln in (resume_text or "").splitlines()]
     in_cert_block = False
 
-    # Define regex patterns for certifications (excluding "licenses")
-    cert_keywords = [
-        r"certification in", r"certified", r"certified in", r"certificate", r"certification", r"badge", r"accredited"
-    ]
-    
-    # Iterate over lines to find certifications
+    # Iterate over lines to find the certifications block and items
     for raw in lines:
-        ln = _norm_text(raw)  # Assuming _norm_text cleans the text properly
+        ln = _norm_text(raw) # Normalized line
 
-        # Detect entering/leaving the certification section based on keywords (excluding licenses)
+        # 1. Detect entering/leaving the certification section
+        # Entering the block
         if re.match(r"^\s*(certifications?|CERTIFICATIONS?|certified|certificate|badge)\s*:?$", ln, re.I):
             in_cert_block = True
             continue
-        if in_cert_block and (not ln or re.match(r"^(experience|education|projects?|skills?|profile|summary|achievements?)\s*:?\s*$", ln, re.I)):
+        # Leaving the block (when a new major section starts)
+        if in_cert_block and (not ln or re.match(r"^(experience|education|projects?|skills?|profile|summary|achievements?|technical skills)\s*:?\s*$", ln, re.I)):
             in_cert_block = False
+            continue
 
-        # Clean and validate the line
-        cand = _clean_cert_name(ln)  # Assuming _clean_cert_name handles the cleaning correctly
+        # 2. Extract potential certification lines ONLY if inside the block
+        if in_cert_block:
+            cand = _clean_cert_name(ln)
 
-        # Check if the line looks like a certification line (if within the cert block or matching keywords)
-        if (in_cert_block and cand) or any(re.search(keyword, cand, re.IGNORECASE) for keyword in cert_keywords):
-            # Only add reasonably short cert lines (to avoid including irrelevant long text)
+            # Only add reasonably short, non-empty cert lines
             if 3 <= len(cand) <= 140:
                 certificates.append({
                     "name": cand,
-                    "source": "resume_text",
-                    "score": 0  # Initial score to be determined later
+                    "source": "cert_section",
+                    "score": 0
                 })
 
     # --- Deduplicate (case/space-insensitive) preserving order ---
     seen = set()
     unique_certificates: List[Dict[str, str]] = []
     for cert in certificates:
-        key = re.sub(r"[\s\-–—]+", " ", cert['name'].lower()).strip()  # Normalize and remove unwanted characters
+        # Normalize name for deduplication (lowercase, single spaces)
+        key = re.sub(r"[\s\-–—]+", " ", cert['name'].lower()).strip()
         if key and key not in seen:
             seen.add(key)
             unique_certificates.append(cert)
@@ -2028,28 +2046,25 @@ def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str
     # --- Score the certificates ---
     for cert in unique_certificates:
         score = 0
+        name_lower = cert["name"].lower()
+
         # Scoring based on the name of the certification (length and key phrases)
         if len(cert["name"]) > 50:
-            score += 2  # Longer names might indicate more detailed, recognized certifications
-        if "certification" in cert["name"].lower():
-            score += 2  # Presence of the word 'certification' adds weight
-        if "course" in cert["name"].lower():
-            score += 1  # Presence of the word 'course' adds a moderate weight
-        if "badge" in cert["name"].lower():
-            score += 1  # Presence of 'badge' adds weight as it could be a recognized platform
-        if "certified" in cert["name"].lower():
-            score += 3  # Higher score for recognized certifications
-        if "professional" in cert["name"].lower():
-            score += 2  # High weight for professional certifications
+            score += 2
+        if "certification" in name_lower:
+            score += 2
+        if "course" in name_lower:
+            score += 1
+        if "badge" in name_lower:
+            score += 1
+        if "certified" in name_lower:
+            score += 3
+        if "professional" in name_lower:
+            score += 2
 
         cert["score"] = score
 
-    # Debugging Output: You can remove these prints in production
-    print(f"Detected certifications: {[cert['name'] for cert in unique_certificates]}")
-    print(f"Unique certifications after deduplication: {[cert['name'] for cert in unique_certificates]}")
-
     return len(unique_certificates), unique_certificates
-
 
 
 # --- MODIFIED FUNCTION SIGNATURE AND LOGIC ---
@@ -3301,6 +3316,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
