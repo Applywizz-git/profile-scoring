@@ -2817,42 +2817,34 @@ def analyze_resume(request):
             
             def _autopct(p): return f"{p:.0f}%" if p >= 5 else ""
             
-            # Use the dynamically calculated SECTION_MAX from the outer scope or fall back to the fallback values
+            # Use SECTION_MAX for dynamic max values or fall back to SECTION_MAX_FALLBACK
             section_max_ref = SECTION_MAX if 'SECTION_MAX' in globals() else SECTION_MAX_FALLBACK
             
-            # Define the colors for each section (ATS in orange, others in unique colors)
-            color_palette = [
-                "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", 
-                "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
-            ]
+            # Define the colors for each section
+            color_map = {
+                "Resume (ATS)": "#ff7f0e",  # Orange for ATS
+                "LinkedIn": "#1f77b4",      # Blue for LinkedIn
+                "GitHub": "#9467bd",         # Purple for GitHub
+                "Portfolio": "#2ca02c",      # Green for Portfolio
+                "Certifications": "#d62728", # Red for Certifications
+            }
             
-            # Define a color mapping for each section
-            colors = []
-            for i, section in enumerate(labels):
-                if section == "Resume (ATS)":
-                    colors.append("#ff7f0e")  # Orange for ATS
-                else:
-                    # Assign a unique color for each non-ATS section
-                    colors.append(color_palette[i % len(color_palette)])
+            colors = [color_map.get(section, "#1f77b4") for section in labels]  # Default to blue if section isn't mapped
             
-            # Create the pie chart with unique colors
             wedges, _, _ = ax.pie(values, labels=None, autopct=_autopct, startangle=140,
                                    colors=colors, textprops={"color": "white", "fontsize": 10})
             ax.axis("equal")
             
-            # Prepare legend labels
             legend_labels = []
             for lbl, val in zip(labels, values):
                 max_val = section_max_ref.get(lbl, 1)  # Use 1 to prevent ZeroDivisionError
                 percent = (val / max_val) * 100.0 if max_val else 0.0
                 legend_labels.append(f"{lbl}: {val}/{max_val} ({percent:.0f}%)")
             
-            # Ensure the legend uses the same colors as the pie chart
             ax.legend(wedges, legend_labels, loc="lower center", bbox_to_anchor=(0.5, -0.22),
                       fontsize=9, frameon=False, labelcolor="white", ncol=2, columnspacing=1.2,
                       handlelength=1.2, borderpad=0.2)
             
-            # Save the figure as a base64-encoded PNG
             buf = io.BytesIO()
             plt.tight_layout()
             plt.savefig(buf, format="png", dpi=160, facecolor="#121212", bbox_inches="tight")
@@ -2861,6 +2853,7 @@ def analyze_resume(request):
             plt.close(fig)
             
             return b64
+
 
 
 
@@ -3308,6 +3301,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
