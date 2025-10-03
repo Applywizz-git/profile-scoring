@@ -1988,7 +1988,7 @@ def _clean_cert_name(text: str) -> str:
 
 # --- MAIN FUNCTION (Revised) ---
 
-def count_certifications_from_text_revised(resume_text: str) -> Tuple[int, List[Dict[str, str]]]:
+def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str, str]]]:
     """
     Scans resume text ONLY for lines within an explicit 'Certifications' block,
     counts the unique certifications, and scores them.
@@ -3316,6 +3316,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
