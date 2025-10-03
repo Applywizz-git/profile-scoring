@@ -2785,9 +2785,6 @@ def analyze_resume(request):
                 "GitHub": 27, "LinkedIn": 18, "Portfolio": 23, "Resume (ATS)": 23, "Certifications": 9,
             }
             
-            # Using the dynamically calculated SECTION_MAX from the outer scope is best
-            # For this example, we'll rely on it being available in the module scope or passed if needed.
-            
             if not scores or sum(scores.values()) == 0:
                 return ""
             
@@ -2797,17 +2794,23 @@ def analyze_resume(request):
             
             def _autopct(p): return f"{p:.0f}%" if p >= 5 else ""
             
-            # NOTE: The original code for legend labels relies on SECTION_MAX being available
-            # We'll use a placeholder/assuming it's available.
+            # Use the dynamically calculated SECTION_MAX from the outer scope or fall back to the fallback values
             section_max_ref = SECTION_MAX if 'SECTION_MAX' in globals() else SECTION_MAX_FALLBACK
             
-            # Define the colors for each section
+            # Define the colors for each section (ATS in orange, others in unique colors)
+            color_palette = [
+                "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", 
+                "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+            ]
+            
+            # Define a color mapping for each section
             colors = []
-            for section in labels:
+            for i, section in enumerate(labels):
                 if section == "Resume (ATS)":
                     colors.append("#ff7f0e")  # Orange for ATS
                 else:
-                    colors.append("#1f77b4")  # Blue for others (you can change this to any color)
+                    # Assign a unique color for each non-ATS section
+                    colors.append(color_palette[i % len(color_palette)])
             
             wedges, _, _ = ax.pie(values, labels=None, autopct=_autopct, startangle=140,
                                    colors=colors, textprops={"color": "white", "fontsize": 10})
@@ -3277,6 +3280,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
