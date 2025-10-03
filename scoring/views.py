@@ -1963,9 +1963,12 @@ def _looks_like_cert_line(line: str) -> bool:
     # Looking for patterns like certification, certified, course, badge, etc.
     return bool(re.search(r"(certification|certificate|certified|course|training|badge)", line, re.IGNORECASE))
 
+import re
+from typing import List, Tuple, Dict
+
 def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str, str]]]:
     """
-    Scans resume text for certifications and scores them dynamically based on their relevance.
+    Scans resume text for certifications (excluding licenses) and scores them dynamically based on their relevance.
     
     Args:
         resume_text: The text of the resume to scan for certifications.
@@ -1980,25 +1983,34 @@ def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str
     # --- From text (section + anywhere) ---
     lines = [ln.strip() for ln in (resume_text or "").splitlines()]
     in_cert_block = False
-    for raw in lines:
-        ln = _norm_text(raw)
 
-        # Detect entering/leaving explicit section
-        if re.match(r"^\s*(licenses?\s*&?\s*certifications?|certifications?|CERTIFICATIONS?|licenses?)\s*:?$", ln, re.I):
+    # Define regex patterns for certifications (excluding "licenses")
+    cert_keywords = [
+        r"certification in", r"certified", r"certified in", r"certificate", r"certification", r"badge", r"accredited"
+    ]
+    
+    # Iterate over lines to find certifications
+    for raw in lines:
+        ln = _norm_text(raw)  # Assuming _norm_text cleans the text properly
+
+        # Detect entering/leaving the certification section based on keywords (excluding licenses)
+        if re.match(r"^\s*(certifications?|CERTIFICATIONS?)\s*:?$", ln, re.I):
             in_cert_block = True
             continue
         if in_cert_block and (not ln or re.match(r"^(experience|education|projects?|skills?|profile|summary|achievements?)\s*:?\s*$", ln, re.I)):
             in_cert_block = False
 
         # Clean and validate the line
-        cand = _clean_cert_name(ln)
-        if (in_cert_block and cand) or _looks_like_cert_line(cand):
-            # Only add reasonably short cert lines
+        cand = _clean_cert_name(ln)  # Assuming _clean_cert_name handles the cleaning correctly
+
+        # Check if the line looks like a certification line (if within the cert block or matching keywords)
+        if (in_cert_block and cand) or any(re.search(keyword, cand, re.IGNORECASE) for keyword in cert_keywords):
+            # Only add reasonably short cert lines (to avoid including irrelevant long text)
             if 3 <= len(cand) <= 140:
                 certificates.append({
                     "name": cand,
                     "source": "resume_text",
-                    "score": 0  # Initial score to be determined
+                    "score": 0  # Initial score to be determined later
                 })
 
     # --- Deduplicate (case/space-insensitive) preserving order ---
@@ -2022,8 +2034,16 @@ def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str
             score += 1  # Presence of the word 'course' adds a moderate weight
         if "badge" in cert["name"].lower():
             score += 1  # Presence of 'badge' adds weight as it could be a recognized platform
+        if "certified" in cert["name"].lower():
+            score += 3  # Higher score for recognized certifications
+        if "professional" in cert["name"].lower():
+            score += 2  # High weight for professional certifications
 
         cert["score"] = score
+
+    # Debugging Output: You can remove these prints in production
+    print(f"Detected certifications: {[cert['name'] for cert in unique_certificates]}")
+    print(f"Unique certifications after deduplication: {[cert['name'] for cert in unique_certificates]}")
 
     return len(unique_certificates), unique_certificates
 
@@ -3285,6 +3305,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
