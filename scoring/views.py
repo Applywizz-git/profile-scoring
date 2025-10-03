@@ -1984,7 +1984,7 @@ def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str
         ln = _norm_text(raw)
 
         # Detect entering/leaving explicit section
-        if re.match(r"^\s*(licenses?\s*&?\s*certifications?|certifications?|licenses?)\s*:?$", ln, re.I):
+        if re.match(r"^\s*(licenses?\s*&?\s*certifications?|certifications?|CERTIFICATIONS?|licenses?)\s*:?$", ln, re.I):
             in_cert_block = True
             continue
         if in_cert_block and (not ln or re.match(r"^(experience|education|projects?|skills?|profile|summary|achievements?)\s*:?\s*$", ln, re.I)):
@@ -3277,6 +3277,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
