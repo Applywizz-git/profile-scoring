@@ -1966,6 +1966,9 @@ def _looks_like_cert_line(line: str) -> bool:
 import re
 from typing import List, Tuple, Dict
 
+import re
+from typing import List, Tuple, Dict
+
 def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str, str]]]:
     """
     Scans resume text for certifications (excluding licenses) and scores them dynamically based on their relevance.
@@ -3305,6 +3308,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
