@@ -2560,7 +2560,7 @@ def analyze_resume(request):
         job_description = (request.POST.get("job_description", "") or "").strip()
 
         # --- FIX 1 & 2: Single Certificate Calculation and Recommendation ---
-        cert_count, cert_names_found = count_only_certifications(resume_text)
+        cert_count, cert_names_found = count_certifications_from_text(resume_text)
         print(f"Certifications detected: count = {cert_count}, names = {cert_names_found}")
 
         recommended_certs = suggest_role_certifications_v1(role_slug, cert_names_found)
@@ -3277,6 +3277,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
