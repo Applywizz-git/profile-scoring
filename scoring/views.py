@@ -1384,26 +1384,43 @@ def analyze_resume(request):
         def _build_pie_base64_local(scores: Dict[str, int]) -> str:
             if not scores or sum(scores.values()) == 0:
                 return ""
+            
+            # Define the colors for each section
+            colors = []
+            for section in scores:
+                if section == "Resume (ATS)":
+                    colors.append("#ff7f0e")  # Orange for ATS
+                else:
+                    colors.append("#1f77b4")  # Blue for others (you can change this to any color)
+        
             labels, values = list(scores.keys()), list(scores.values())
             fig, ax = plt.subplots(figsize=(4.6, 4.6), facecolor="#121212")
             ax.set_facecolor("#121212")
+        
             def _autopct(p): return f"{p:.0f}%" if p >= 5 else ""
+            
             wedges, _, _ = ax.pie(values, labels=None, autopct=_autopct, startangle=140,
-                                  textprops={"color": "white", "fontsize": 10})
+                                   colors=colors, textprops={"color": "white", "fontsize": 10})
             ax.axis("equal")
+        
             legend_labels = [
                 f"{lbl}: {val}/{SECTION_MAX[lbl]} ({(val/SECTION_MAX[lbl])*100:.0f}%)"
                 for lbl, val in zip(labels, values)
             ]
+            
             ax.legend(wedges, legend_labels, loc="lower center", bbox_to_anchor=(0.5, -0.22),
                       fontsize=9, frameon=False, labelcolor="white", ncol=2, columnspacing=1.2,
                       handlelength=1.2, borderpad=0.2)
+            
             buf = io.BytesIO()
             plt.tight_layout()
             plt.savefig(buf, format="png", dpi=160, facecolor="#121212", bbox_inches="tight")
             b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-            buf.close(); plt.close(fig)
+            buf.close()
+            plt.close(fig)
+            
             return b64
+
 
         pie_chart_image = _build_pie_base64_local(section_scores)
 
@@ -1703,6 +1720,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
