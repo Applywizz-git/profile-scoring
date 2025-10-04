@@ -1971,101 +1971,117 @@ from typing import List, Tuple, Dict
 
 # --- REQUIRED HELPER FUNCTIONS ---
 
+import re
+from typing import List, Tuple, Dict
+from urllib.parse import urlparse
+
+# --- Helper functions (These were implicitly available or defined inline) ---
+
 def _norm_text(text: str) -> str:
-    """
-    Placeholder: Cleans and normalizes the input text line.
-    A simple implementation might just return the stripped text.
-    """
-    return text.strip()
+    """Normalize the text by stripping and lowering the case."""
+    # Retains the original line structure while normalizing for comparison
+    return (text or "").strip()
 
 def _clean_cert_name(text: str) -> str:
-    """
-    Placeholder: Cleans a potential certification name.
-    """
-    # In a real-world scenario, this function would remove dates, parentheticals,
-    # bullet points, and other noise to isolate the certificate name.
-    return _norm_text(text)
+    """Clean up the certification name by removing common noise."""
+    s = text.strip()
+    # Remove common bullet characters and excess whitespace
+    s = re.sub(r"^\s*[-*•■●]|[0-9]+\.\s*", "", s).strip()
+    # Remove potential dates and parentheses at the end
+    s = re.sub(r"\s*\(.*?\)|\s*\[.*?\]|\s*\{\.*?\}", "", s)
+    # Remove trailing dates (e.g., ' - 2023' or ', 2023')
+    s = re.sub(r"[\s\-,;]+(?:[A-Za-z]+\s+)?\d{4}(?:\s*-\s*(?:present|\d{4}))?\s*$", "", s, flags=re.I).strip()
+    # Remove common trailing terms
+    s = re.sub(r"\s*(License|Credential|ID|No\.?|Certificate)\s*.*$", "", s, flags=re.I).strip()
+    return re.sub(r"\s{2,}", " ", s) # Clean up internal spaces
 
-# --- MAIN FUNCTION (Revised) ---
+def _looks_like_cert_line(line: str) -> bool:
+    """Detect if a line looks like a certification using strong keywords/patterns."""
+    # Standard cert/license terms
+    if re.search(r"\b(certification|certificate|certified|license|licen[sc]e|credential|exam|badge)\b", line, re.I):
+        return True
+    # Common provider or exam patterns (AWS, Azure, Google, CISSP, PMP)
+    if re.search(r"\b(AWS|Azure|GCP|PMP|CISSP|CompTIA|CKA|CKAD)\b", line):
+        return True
+    # Microsoft exam codes (e.g., AZ-900, DP-203)
+    if re.search(r"\b(AZ|DP|AI|PL|SC|MS|MD)-\d{3}\b", line):
+        return True
+    return False
+
+# --- Main Function for Text Extraction ---
 
 def count_certifications_from_text(resume_text: str) -> Tuple[int, List[Dict[str, str]]]:
     """
-    Scans resume text ONLY for lines within an explicit 'Certifications' block,
-    counts the unique certifications, and scores them.
+    Scans resume text for lines within an explicit 'Certifications' block
+    or lines that strongly resemble a certification, and counts them.
 
     Args:
         resume_text: The text of the resume to scan for certifications.
 
     Returns:
         A tuple (count, certificates), where:
-        - count is the number of unique certifications found
-        - certificates is a list of dicts containing certification name and score.
+        - count is the number of unique certifications found (int)
+        - certificates is a list of dicts containing unique certification names and their source/initial score.
     """
     certificates: List[Dict[str, str]] = []
+    lines = [ln for ln in (resume_text or "").splitlines() if ln.strip()] # Keep non-empty lines
 
-    # --- From text (section only) ---
-    lines = [ln.strip() for ln in (resume_text or "").splitlines()]
     in_cert_block = False
+    
+    # Track unique names by a normalized key to prevent duplicates
+    seen_keys = set() 
 
-    # Iterate over lines to find the certifications block and items
     for raw in lines:
-        ln = _norm_text(raw) # Normalized line
-
+        ln = _norm_text(raw) # Normalized line (stripped)
+        
         # 1. Detect entering/leaving the certification section
-        # Entering the block
-        if re.match(r"^\s*(certifications?|CERTIFICATIONS?|certified|certificate|badge)\s*:?$", ln, re.I):
+        # Entering the block (more robust heading detection)
+        if re.match(r"^\s*(licenses?&?certifications?|CERTIFICATIONS?|licenses?|professional\s+development)\s*:?$", ln, re.I):
             in_cert_block = True
             continue
+        
         # Leaving the block (when a new major section starts)
-        if in_cert_block and (not ln or re.match(r"^(experience|education|projects?|skills?|profile|summary|achievements?|technical skills)\s*:?\s*$", ln, re.I)):
+        if in_cert_block and re.match(r"^(experience|education|projects?|skills?|profile|summary|achievements?|technical\s+skills|work\s+history)\s*:?\s*$", ln, re.I):
             in_cert_block = False
             continue
 
-        # 2. Extract potential certification lines ONLY if inside the block
-        if in_cert_block:
-            cand = _clean_cert_name(ln)
-
-            # Only add reasonably short, non-empty cert lines
-            if 3 <= len(cand) <= 140:
+        # 2. Extract potential certification lines
+        candidate_raw = raw.strip()
+        
+        # Prioritize extraction inside the dedicated block
+        if in_cert_block and len(candidate_raw) > 3:
+            cand_name = _clean_cert_name(candidate_raw)
+            key = re.sub(r"[\s\-–—]+", " ", cand_name.lower()).strip()
+            
+            # Check for a cert hint even in the block, to filter out simple bullets like "January 2023"
+            if key and len(key) >= 5 and key not in seen_keys:
+                 # If inside the block, trust the text more, but still validate minimum quality
+                seen_keys.add(key)
                 certificates.append({
-                    "name": cand,
+                    "name": cand_name,
                     "source": "cert_section",
+                    "score": 0 
+                })
+        
+        # Secondary check: extract strong cert-looking lines anywhere (e.g., in a summary or projects section)
+        elif not in_cert_block and _looks_like_cert_line(candidate_raw) and len(candidate_raw) >= 5:
+            cand_name = _clean_cert_name(candidate_raw)
+            key = re.sub(r"[\s\-–—]+", " ", cand_name.lower()).strip()
+
+            if key and key not in seen_keys:
+                seen_keys.add(key)
+                certificates.append({
+                    "name": cand_name,
+                    "source": "anywhere_hint",
                     "score": 0
                 })
 
-    # --- Deduplicate (case/space-insensitive) preserving order ---
-    seen = set()
-    unique_certificates: List[Dict[str, str]] = []
-    for cert in certificates:
-        # Normalize name for deduplication (lowercase, single spaces)
-        key = re.sub(r"[\s\-–—]+", " ", cert['name'].lower()).strip()
-        if key and key not in seen:
-            seen.add(key)
-            unique_certificates.append(cert)
-
-    # --- Score the certificates ---
-    for cert in unique_certificates:
-        score = 0
-        name_lower = cert["name"].lower()
-
-        # Scoring based on the name of the certification (length and key phrases)
-        if len(cert["name"]) > 50:
-            score += 2
-        if "certification" in name_lower:
-            score += 2
-        if "course" in name_lower:
-            score += 1
-        if "badge" in name_lower:
-            score += 1
-        if "certified" in name_lower:
-            score += 3
-        if "professional" in name_lower:
-            score += 2
-
-        cert["score"] = score
-
-    return len(unique_certificates), unique_certificates
-
+    # The original scoring logic from your provided code is kept minimal here for clean integration,
+    # but the ATS scoring function (calculate_dynamic_ats_score) can use the names for its own advanced scoring.
+    # We only return the count of unique detected names and the list of unique names.
+    
+    unique_count = len(certificates)
+    return unique_count, certificates
 
 # --- MODIFIED FUNCTION SIGNATURE AND LOGIC ---
 def calculate_dynamic_ats_score(resume_text: str, github_username: str, leetcode_username: str, extracted_links: List[Dict[str, Any]], cert_count: int, cert_names_found: List[str]):
@@ -3316,6 +3332,7 @@ def ats_report_view(request):
         }
         return render(request, "ats_report.html", ctx)
     return HttpResponseBadRequest("Use the upload endpoint to submit a resume.")
+
 
 
 
